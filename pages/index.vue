@@ -90,6 +90,7 @@
       },
 
       async saveEditText(todo) {
+        if (!todo.text){return;}
         delete todo.isEdit;
         await axios.put(`http://localhost:3001/todos/${todo.id}`, todo)
         this.loadDataServer();

@@ -13,20 +13,20 @@
             v-model="edittext[todo.id].text"
             placeholder="Что нужно сделать?"
             >
-          <span v-else :class="{done : todo.done}">{{ todo.text}}</span>
+          <span v-else :class="{done : todo.done}">{{ todo.text }}</span>
           <div v-if="!(edittext[todo.id] && edittext[todo.id].isEdit)">
-            <button class="edittask" @click="editTask(todo);">Edit Tesk</button>
-            <button class="deltask" @click="delTask(todo)">Delete Task</button>
+            <button class="edittask" @click="editTask(todo)">Edit Tesk</button>
+            <button class="deltask" @click="deleteTaskFromServer(todo)">Delete Task</button>
           </div> 
           <template v-else>
             <button class="canceltask" @click.prevent="cancelEdit(todo)">Cancel</button>
-            <button class="ok" @click.prevent="saveEditText(todo)">Ok</button>
+            <button class="ok" @click.prevent="saveEditText(edittext[todo.id])">Ok</button>
           </template>
         </label>
       </li>
     </ol>
     <button class="addtask" @click="addTask()">Add Task</button>
-    <button class="delalltask" @click="delAllTask()">Delete All Task</button>
+    <button class="delalltask" @click="deleteAllDoneTaskFromServer(todos)">Delete All Task</button>
   </div>
 </template>
 
@@ -43,13 +43,15 @@
     },
 
     methods: {
-      toggle: function (todo) {
+      async toggle(todo) {
         todo.done = !todo.done
+        await axios.put(`http://localhost:3001/todos/${todo.id}`, todo);
+        this.loadDataServer();
       },
 
       async addTask() {
         if (!this.texttask) {return};
-        var text = {id: 0, text: this.texttask, done: false, edit: false};
+        var text = {id: 0, text: this.texttask, done: false};
         // for (let i = 0; i < this.todos.length; i++) {
         //   if (this.todos[i].text == text.text) {return};
         // }
@@ -64,30 +66,35 @@
         this.addDataServer(text);
       },
 
-      async delTask(todo) {
+      async deleteTaskFromServer(todo) {
         if (!todo.done) return;
         await axios.delete(`http://localhost:3001/todos/${todo.id}`);
         this.loadDataServer();
         
       },
 
-      async delAllTask() {
+      async deleteAllDoneTaskFromServer(todos) {
         await axios.delete(`http://localhost:3001/todos/`);
         this.loadDataServer();
         //this.todos = this.todos.filter(todo => !todo.text)
       },
 
       editTask(todo) {
-        this.$set(this.edittext, todo.id, {isEdit: true, text: todo.text});
+        this.$set(this.edittext, todo.id, Object.assign({isEdit: true}, todo));
+
       },
 
       cancelEdit(todo) {
         this.edittext[todo.id].isEdit = false;
 
       },
-      saveEditText(todo) {
-        this.edittext[todo.id].isEdit = false;
-        todo.text = this.edittext[todo.id].text;
+
+      async saveEditText(todo) {
+        delete todo.isEdit;
+        await axios.put(`http://localhost:3001/todos/${todo.id}`, todo)
+        this.loadDataServer();
+        //this.edittext[todo.id].isEdit = false;
+        //todo.text = this.edittext[todo.id].text;
       },
 
       async loadDataServer() {

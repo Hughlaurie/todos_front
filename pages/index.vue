@@ -42,6 +42,12 @@
       }
     },
 
+    watch: {
+      texttask(temptexttask) {
+        localStorage.texttask = temptexttask;
+      }
+    },
+  
     methods: {
       async toggle(todo) {
         todo.done = !todo.done
@@ -52,17 +58,6 @@
       async addTask() {
         if (!this.texttask) {return};
         var text = {id: 0, text: this.texttask, done: false};
-        // for (let i = 0; i < this.todos.length; i++) {
-        //   if (this.todos[i].text == text.text) {return};
-        // }
-        /*text.id = this.todos.length;
-        //Проверяем есть такой id в массиве
-          for (let i = 0; i < this.todos.length; i++) {
-          if (text.id == this.todos[i].id) {
-              text.id++;
-          }
-        }*/
-        //this.todos.push(text);
         this.addDataServer(text);
       },
 
@@ -113,7 +108,9 @@
     mounted() {
       this.loadDataServer();
       console.log (this.todos);
-      
+      if (localStorage.texttask) {
+        this.texttask = localStorage.texttask;
+      }      
     }
   }
 
